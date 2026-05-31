@@ -1,8 +1,10 @@
 # Use the frooodle/s-pdf image as the base
 FROM frooodle/s-pdf:latest-fat
 
-# Install Tini to manage processes
-RUN apk add --no-cache tini
+# Install Tini to manage processes (base image is Debian/Ubuntu, not Alpine)
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends tini \
+	&& rm -rf /var/lib/apt/lists/*
 
 # Copy and make the run.sh script executable
 COPY run.sh /run.sh
