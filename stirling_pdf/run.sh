@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Ensure the /data directory itself is writable by any user (in case container drops privileges)
+chmod 777 /data 2>/dev/null || true
+
 setup_persistent_dir() {
     local src="$1"  # e.g., /data/configs
     local dest="$2" # e.g., /configs
@@ -8,11 +11,13 @@ setup_persistent_dir() {
     
     # Ensure source directory exists
     mkdir -p "$src"
+    chmod 777 "$src" 2>/dev/null || true
     
     # Copy contents if the source directory is empty
     if [ -d "$dest" ] && [ -z "$(ls -A "$src" 2>/dev/null)" ]; then
         echo "Copying default files from $dest to $src..."
         cp -rn "$dest"/* "$src"/ 2>/dev/null || true
+        chmod -R 777 "$src" 2>/dev/null || true
     fi
     
     # If destination exists and is not already a symbolic link pointing to src
@@ -49,10 +54,10 @@ setup_persistent_dir "/data/pipeline" "/pipeline"
 setup_persistent_dir "/data/customFiles" "/customFiles"
 setup_persistent_dir "/data/tessdata" "/usr/share/tessdata"
 
-# Change to /data so Stirling-PDF runs in the persistent context
-cd /data
+# Ensure all files in the persistent storage have full permissions
+chmod -R 777 /data/configs /data/logs /data/pipeline /data/customFiles /data/tessdata 2>/dev/null || true
 
-# Start the Stirling-PDF application
+# Start the Stirling-PDF application (without cd /data, to keep original working directory)
 exec java -Dfile.encoding=UTF-8 -jar /app.jar
 
 
